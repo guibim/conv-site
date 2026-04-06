@@ -2,13 +2,15 @@ import { useState, useCallback } from "react";
 import { Upload, FileText, CheckCircle2, X, Loader2, AlertTriangle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { CONVERT_ENDPOINT, MAX_UPLOAD_BYTES } from "@/lib/api";
 
 interface FileUploaderProps {
   acceptedExtension: string;
-  outputFormat: string;
+  fromFormat: string;
+  toFormat: string;
 }
 
-const FileUploader = ({ acceptedExtension, outputFormat }: FileUploaderProps) => {
+const FileUploader = ({ acceptedExtension, fromFormat, toFormat }: FileUploaderProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isConverting, setIsConverting] = useState(false);
@@ -16,8 +18,27 @@ const FileUploader = ({ acceptedExtension, outputFormat }: FileUploaderProps) =>
   const [error, setError] = useState<string | null>(null);
   const { t } = useLanguage();
 
-  const fromFormat = acceptedExtension.replace(".", "");
-  const toFormat = outputFormat.toLowerCase();
+  const normalizedAcceptedExtension = acceptedExtension.toLowerCase();
+
+  const isAcceptedFile = useCallback((candidate: File) => {
+    return candidate.name.toLowerCase().endsWith(normalizedAcceptedExtension);
+  }, [normalizedAcceptedExtension]);
+
+  const prepareFile = useCallback((candidate: File) => {
+    if (!isAcceptedFile(candidate)) {
+      setError(t("uploader.invalid_type"));
+      return;
+    }
+
+    if (candidate.size > MAX_UPLOAD_BYTES) {
+      setError(t("uploader.max_size"));
+      return;
+    }
+
+    setFile(candidate);
+    setIsConverted(false);
+    setError(null);
+  }, [isAcceptedFile, t]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -36,21 +57,14 @@ const FileUploader = ({ acceptedExtension, outputFormat }: FileUploaderProps) =>
 
     const files = e.dataTransfer.files;
     if (files && files[0]) {
-      const droppedFile = files[0];
-      if (droppedFile.name.endsWith(acceptedExtension)) {
-        setFile(droppedFile);
-        setIsConverted(false);
-        setError(null);
-      }
+      prepareFile(files[0]);
     }
-  }, [acceptedExtension]);
+  }, [prepareFile]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files[0]) {
-      setFile(files[0]);
-      setIsConverted(false);
-      setError(null);
+      prepareFile(files[0]);
     }
   };
 
@@ -66,13 +80,23 @@ const FileUploader = ({ acceptedExtension, outputFormat }: FileUploaderProps) =>
     formData.append("to_format", toFormat);
 
     try {
-      const response = await fetch("https://conv-api-la6e.onrender.com/convert", {
+      const response = await fetch(CONVERT_ENDPOINT, {
         method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+        const rawBody = await response.text();
+        let errorData: Record<string, string> = {};
+
+        if (rawBody) {
+          try {
+            errorData = JSON.parse(rawBody) as Record<string, string>;
+          } catch {
+            errorData = {};
+          }
+        }
+
         throw new Error(errorData.detail || `HTTP Error: ${response.status}`);
       }
 
@@ -188,7 +212,7 @@ const FileUploader = ({ acceptedExtension, outputFormat }: FileUploaderProps) =>
               {t("uploader.converting")}
             </>
           ) : (
-            `${t("uploader.convert")} ${outputFormat.toUpperCase()}`
+            `${t("uploader.convert")} ${toFormat.toUpperCase()}`
           )}
         </Button>
       )}

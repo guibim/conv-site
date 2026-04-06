@@ -6,8 +6,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Upload, Loader2, ImageIcon, ShieldCheck, FlaskConical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-
-const METADATA_API_URL = "https://conv-nyst.onrender.com/extract-metadata";
+import { MAX_UPLOAD_BYTES, METADATA_ENDPOINT } from "@/lib/api";
 
 const ExtractMetadata = () => {
   const { t } = useLanguage();
@@ -27,7 +26,7 @@ const ExtractMetadata = () => {
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       const selectedFile = acceptedFiles[0];
-      if (selectedFile.size > 10 * 1024 * 1024) {
+      if (selectedFile.size > MAX_UPLOAD_BYTES) {
         setError(t("metadata.error.size"));
         return;
       }
@@ -56,18 +55,25 @@ const ExtractMetadata = () => {
     formData.append("file", file);
 
     try {
-      const response = await fetch(METADATA_API_URL, {
+      const response = await fetch(METADATA_ENDPOINT, {
         method: "POST",
         body: formData,
       });
 
       const rawBody = await response.text();
-      const data = rawBody ? JSON.parse(rawBody) : null;
+      let data: unknown = null;
+
+      if (rawBody) {
+        data = JSON.parse(rawBody);
+      }
+
+      const detail =
+        typeof data === "object" && data !== null
+          ? (data as { detail?: string }).detail
+          : undefined;
 
       if (!response.ok) {
-        throw new Error(
-          typeof data?.detail === "string" ? data.detail : t("metadata.error.server")
-        );
+        throw new Error(typeof detail === "string" ? detail : t("metadata.error.server"));
       }
 
       setMetadata(data);
@@ -104,7 +110,7 @@ const ExtractMetadata = () => {
               </h1>
               <Badge variant="secondary" className="bg-amber-500/20 text-amber-600 dark:text-amber-400 border-amber-500/30">
                 <FlaskConical className="h-3 w-3 mr-1" />
-                BETA
+                {t("badge.beta")}
               </Badge>
             </div>
             <p className="text-muted-foreground text-sm">

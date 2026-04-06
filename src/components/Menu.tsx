@@ -36,7 +36,8 @@ const Menu = () => {
     setIsDark(!isDark);
   };
 
-  const isConverterActive = location.pathname === "/" || 
+  const isConverterActive =
+    location.pathname === "/" ||
     (location.pathname !== "/extract-metadata" && location.pathname !== "/about");
   const isMetadataActive = location.pathname === "/extract-metadata";
 
@@ -44,17 +45,14 @@ const Menu = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-background/80 backdrop-blur-sm">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src={logo} alt="Conv+ Logo" className="h-10 w-auto" />
-          <span className="text-xl font-bold text-foreground">
-            Conv<span className="text-primary">+</span>
-          </span>
+          <img src={logo} alt="Conv Logo" className="h-10 w-auto" />
+          <span className="text-xl font-bold text-foreground">Conv</span>
         </Link>
 
-        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-1">
           <Link to="/">
-            <Button 
-              variant={isConverterActive ? "default" : "ghost"} 
+            <Button
+              variant={isConverterActive ? "default" : "ghost"}
               className="flex items-center gap-2"
             >
               <FileOutput className="h-4 w-4" />
@@ -63,8 +61,8 @@ const Menu = () => {
           </Link>
 
           <Link to="/extract-metadata">
-            <Button 
-              variant={isMetadataActive ? "default" : "ghost"} 
+            <Button
+              variant={isMetadataActive ? "default" : "ghost"}
               className="flex items-center gap-2"
             >
               <FileSearch className="h-4 w-4" />
@@ -90,13 +88,13 @@ const Menu = () => {
                 onClick={() => setLanguage("pt")}
                 className={language === "pt" ? "bg-accent" : ""}
               >
-                🇧🇷 PT-BR
+                PT-BR
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setLanguage("en")}
                 className={language === "en" ? "bg-accent" : ""}
               >
-                🇺🇸 ENG
+                EN
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -111,7 +109,6 @@ const Menu = () => {
           </Button>
         </nav>
 
-        {/* Mobile Menu Button */}
         <div className="flex md:hidden items-center gap-1">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -124,13 +121,13 @@ const Menu = () => {
                 onClick={() => setLanguage("pt")}
                 className={language === "pt" ? "bg-accent" : ""}
               >
-                🇧🇷 PT-BR
+                PT-BR
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => setLanguage("en")}
                 className={language === "en" ? "bg-accent" : ""}
               >
-                🇺🇸 ENG
+                EN
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -155,7 +152,6 @@ const Menu = () => {
         </div>
       </div>
 
-      {/* Mobile Navigation */}
       {isOpen && (
         <nav className="md:hidden border-t border-border/50 bg-background">
           <div className="container py-3 space-y-1">
@@ -163,7 +159,9 @@ const Menu = () => {
               to="/"
               onClick={() => setIsOpen(false)}
               className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${
-                isConverterActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-primary"
+                isConverterActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-primary"
               }`}
             >
               <FileOutput className="h-4 w-4" />
@@ -173,7 +171,9 @@ const Menu = () => {
               to="/extract-metadata"
               onClick={() => setIsOpen(false)}
               className={`flex items-center gap-2 px-3 py-2 rounded-md transition-colors ${
-                isMetadataActive ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent hover:text-primary"
+                isMetadataActive
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-accent hover:text-primary"
               }`}
             >
               <FileSearch className="h-4 w-4" />
