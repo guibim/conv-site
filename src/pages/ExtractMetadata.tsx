@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Upload, Loader2, ImageIcon, ShieldCheck, FlaskConical } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
+const METADATA_API_URL = "https://conv-nyst.onrender.com/extract-metadata";
+
 const ExtractMetadata = () => {
   const { t } = useLanguage();
   const [file, setFile] = useState<File | null>(null);
@@ -54,19 +56,29 @@ const ExtractMetadata = () => {
     formData.append("file", file);
 
     try {
-      const response = await fetch("https://conv-yw21.onrender.com/extract-exif", {
+      const response = await fetch(METADATA_API_URL, {
         method: "POST",
         body: formData,
       });
 
+      const rawBody = await response.text();
+      const data = rawBody ? JSON.parse(rawBody) : null;
+
       if (!response.ok) {
-        throw new Error("Server error");
+        throw new Error(
+          typeof data?.detail === "string" ? data.detail : t("metadata.error.server")
+        );
       }
 
-      const data = await response.json();
       setMetadata(data);
     } catch (err) {
-      setError(t("metadata.error.server"));
+      setError(
+        err instanceof SyntaxError
+          ? t("metadata.error.server")
+          : err instanceof Error
+            ? err.message
+            : t("metadata.error.server")
+      );
     } finally {
       setIsLoading(false);
     }
